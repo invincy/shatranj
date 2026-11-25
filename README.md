@@ -1,5 +1,7 @@
 # Shatranj — The Royal Battlefield
 
-Playable Version 1.0 browser build: Indian-inspired 3D chess with local two-player play and interactive lessons.
+Play: https://invincy.github.io/shatranj/
 
-This repository contains the published game assets only. Audio attributions are in audio-credits.txt.
+Version 1.1: responsive mobile menu, bottom controls, and interactive 3D lessons. Local two-player chess.
+
+This repository contains published game assets only. Audio attributions: audio-credits.txt.
