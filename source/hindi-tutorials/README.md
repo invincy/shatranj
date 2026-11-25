@@ -13,3 +13,9 @@ Godot narration lifecycle, nine clip mappings and measured durations, existing 3
 Listening review remains pending with the owner, especially 07_castling.mp3: automatic transcription was inconsistent. Real mobile browser audible playback also remains an owner check. On 2026-11-25 the owner requested deployment after technical verification and will review the audio afterward; neither listening nor real-device audibility is claimed as passed. No existing exercise position or spoken coordinate was changed.
 
 Review rerun on 2026-11-25: narration lifecycle, training exercises, mobile layout, web loader, split pack, PWA/offline packaging and home loader checks passed. All nine bundled source MP3s match the supplied recordings and their SHA-256 hashes; the ZIP passes integrity checking. Tested Godot source matches the PR source. Timing metadata matches the pack except for omitted Creator Studio project identifiers. Playback remains 1.0 with no regeneration or extra speed adjustment.
+
+## Demonstrate, then practise
+
+Each lesson now highlights and animates a legal example before resetting the lesson board for the learner. Input is blocked during the demonstration; only a learner move counts as completion. Next appears after successful practice; the final lesson offers Finish. Leaving or changing lessons invalidates pending demonstration callbacks. Muting does not block progression. Compact icon controls provide home, replay narration, voice mute, replay demonstration, and a zoom menu. Existing recordings still play at 1.0 without modification.
+
+Validation: all nine automatic demonstrations reset to the exact original FEN and unlock practice; legal/illegal input, castling, pin, fork, match restoration, mobile touch projection, narration lifecycle and offline web packaging pass. Rendered layout inspected at 320x640, 414x896, 896x414 and 1280x800. Copy the SVGs in ui/ to game/assets/ui/ when rebuilding from these source snapshots.
