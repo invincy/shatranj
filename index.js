@@ -147,7 +147,7 @@ const Preloader = /** @constructor */ function () { // eslint-disable-line no-un
                     try {
                         while (part < 2) {
                             if (!reader) {
-                                const chunk = await fetch(file + '.' + part + '.bin', {signal: abort.signal});
+                                const chunk = await fetch(file + '.' + part + '.bin', {signal: abort.signal, cache: 'no-cache'});
                                 if (!chunk.ok) throw new Error('Unable to load game data part ' + part + '. Please reload.');
                                 reader = chunk.body.getReader();
                             }
