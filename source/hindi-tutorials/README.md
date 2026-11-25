@@ -1,0 +1,13 @@
+# Hindi tutorial narration integration
+
+Nine Aoede Hindi recordings are bundled inside the game pack, in lesson order: pawn, rook, bishop, knight, queen, king, castling, pin, fork. The original 1.25x pitch-preserving adjustment is already in the files. Godot plays at pitch_scale 1.0; do not apply another speed adjustment.
+
+Entering or changing a lesson plays its matching clip. Listen again restarts that clip. Mute voice persists for the current game session. Retry restarts narration unless muted. Back stops narration immediately. Existing Mute all is respected. Music pauses while narration plays and resumes afterward. Written instructions remain available if audio cannot load. The clips cache offline with the complete game pack.
+
+This directory preserves the changed Godot source for review and future builds. In the original development checkout, copy board_training.gd and lesson_voice.gd to game/scripts/, test_lesson_voice.gd to game/tests/, and the nine unchanged MP3s to game/assets/audio/hindi/. See timings.json for filenames, source transcripts, durations, and SHA-256 hashes. Build with the existing Web export and prepare_web.py workflow.
+
+## Validation and release status
+
+Godot narration lifecycle, nine clip mappings and measured durations, existing 3D training exercises, and mobile-layout tests pass. Web export, compressed loader, split pack integrity, and offline cache checks pass. Native rendered layout checked at 1280x800, 414x896, 896x414 and 320x640; voice controls remain outside the scrolling text.
+
+Human listening review remains pending, especially 07_castling.mp3: automatic transcription was inconsistent. Do not label pronunciation/completeness as fully approved. Real mobile browser audible playback still needs checking. This change is prepared as a draft PR, not a live release. No existing exercise position or spoken coordinate was changed.

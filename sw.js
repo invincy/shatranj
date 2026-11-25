@@ -1,4 +1,4 @@
-const CACHE='shatranj-0ad227e29c32d2';
+const CACHE='shatranj-375c3b436ba96f';
 const ASSETS=["app-icon-180.png", "app-icon-192.png", "app-icon-512.png", "audio-credits.txt", "icon.svg", "index.apple-touch-icon.png", "index.audio.position.worklet.js", "index.audio.worklet.js", "index.html", "index.icon.png", "index.js", "index.pck.0.bin", "index.pck.1.bin", "index.png", "index.wasm.gz", "install.css", "install.js", "manifest.webmanifest"];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS.map(name => new Request(new URL(name,self.registration.scope),{cache:'reload'})))));
