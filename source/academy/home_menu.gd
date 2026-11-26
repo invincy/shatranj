@@ -1,0 +1,108 @@
+extends CanvasLayer
+var app
+var content: VBoxContainer
+var scroll: ScrollContainer
+var titles:Array[Label]=[]
+var screen:="home"
+var settings:Button
+var action_buttons:Array[Button]=[]
+func _ready():
+ layer=12
+ var root:=Control.new();root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);add_child(root)
+ var veil:=TextureRect.new();veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);root.add_child(veil)
+ var gradient:=Gradient.new();gradient.set_color(0,Color(.02,.04,.045,.97));gradient.set_color(1,Color(.02,.04,.045,0));gradient.add_point(.42,Color(.02,.04,.045,.75))
+ var texture:=GradientTexture2D.new();texture.gradient=gradient;texture.fill_from=Vector2.ZERO;texture.fill_to=Vector2(1,0);veil.texture=texture
+ scroll=ScrollContainer.new();scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;root.add_child(scroll)
+ content=VBoxContainer.new();content.size_flags_horizontal=Control.SIZE_EXPAND_FILL;content.add_theme_constant_override("separation",18);scroll.add_child(content)
+ settings=app._button("",app._home_settings);settings.icon=load("res://assets/ui/settings.svg");settings.tooltip_text="Settings";settings.custom_minimum_size=Vector2(44,44);settings.add_theme_constant_override("icon_max_width",20)
+ for state in ["normal","hover","pressed"]:
+  var style=settings.get_theme_stylebox(state).duplicate();style.content_margin_left=6;style.content_margin_right=6;style.content_margin_top=6;style.content_margin_bottom=6;settings.add_theme_stylebox_override(state,style)
+ root.add_child(settings)
+ get_viewport().size_changed.connect(layout);layout();show_home()
+func layout():
+ var size:=get_viewport().get_visible_rect().size
+ var narrow:=size.x<600
+ for action_button in action_buttons:
+  if is_instance_valid(action_button):action_button.custom_minimum_size.y=110 if size.x<380 else 88
+ if is_instance_valid(settings):settings.position=Vector2(size.x-56,10)
+ scroll.position=Vector2(24 if narrow else size.x*.055, size.y*.07 if narrow else size.y*.065)
+ scroll.size=Vector2(size.x-48 if narrow else minf(490,size.x*.60),size.y*.88)
+ content.add_theme_constant_override("separation",10 if size.y<700 else 14)
+ for title in titles:
+  if is_instance_valid(title):title.add_theme_font_size_override("font_size",30 if narrow else 40)
+func clear():
+ titles.clear();action_buttons.clear()
+ for child in content.get_children():content.remove_child(child);child.queue_free()
+func text(value:String,size:int=18):
+ var label=app._label(value,size,app.LIGHT);label.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+ if size>=32:
+  titles.append(label)
+  var font:=SystemFont.new();font.font_names=PackedStringArray(["Georgia","Noto Serif"]);label.add_theme_font_override("font",font);label.add_theme_color_override("font_color",app.GOLD)
+ content.add_child(label);layout()
+func button(label:String,callback:Callable,icon_name:String=""):
+ if icon_name=="":
+  icon_name="back" if label=="Back" else ("tactics" if label.begins_with("Pins") else ("opening" if label.begins_with("Openings") else "basics"))
+ var b=app._button(label,callback);b.alignment=HORIZONTAL_ALIGNMENT_LEFT;b.custom_minimum_size.y=54;b.add_theme_font_size_override("font_size",24)
+ b.icon=load("res://assets/ui/"+icon_name+".svg");b.add_theme_constant_override("h_separation",20);b.add_theme_constant_override("icon_max_width",30)
+ b.add_theme_stylebox_override("normal",StyleBoxEmpty.new());b.add_theme_color_override("font_color",app.LIGHT);b.add_theme_color_override("font_hover_color",app.GOLD);content.add_child(b)
+func show_home():
+ screen="home";clear();text("SHATRANJ",44);text("THE ROYAL BATTLEFIELD",12)
+ text("Every master was once a beginner.",20)
+ text("Learn chess by commanding your army.",16)
+ var started:bool=not app.academy.completed.is_empty()
+ action("Continue Learning" if started else "Royal Academy", "Your next lesson awaits" if started else "Begin your journey · no experience needed",continue_learning if started else show_learn,"learn",true)
+ if started:button("Explore the academy",show_learn,"basics")
+ action("Continue Battle" if not app.game.history.is_empty() else "Play Chess","Practise freely · local two-player",app._home_play,"play")
+ action("Challenges","Practise pins and forks",show_challenges,"tactics")
+ button("My Progress · "+str(app.academy.completed.size())+"/9",show_progress,"basics")
+ if not app.game.history.is_empty():button("New battle",confirm_new,"new")
+func action(title:String,subtitle:String,callback:Callable,icon:String,primary:=false):
+ var b=app._button("",callback);b.custom_minimum_size.y=110 if get_viewport().get_visible_rect().size.x<380 else 88;b.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+ b.add_theme_stylebox_override("normal",app._style(Color("23483ee8") if primary else Color("102326a0"),app.GOLD if primary else Color("4a5b50"),8))
+ var row=HBoxContainer.new();row.mouse_filter=Control.MOUSE_FILTER_IGNORE;row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);row.offset_left=16;row.offset_right=-12;row.offset_top=10;row.offset_bottom=-10;b.add_child(row);row.add_theme_constant_override("separation",14)
+ var image=TextureRect.new();image.texture=load("res://assets/ui/"+icon+".svg");image.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;image.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED;image.custom_minimum_size=Vector2(28,28);image.mouse_filter=Control.MOUSE_FILTER_IGNORE;row.add_child(image)
+ var words=VBoxContainer.new();words.size_flags_horizontal=Control.SIZE_EXPAND_FILL;words.mouse_filter=Control.MOUSE_FILTER_IGNORE;row.add_child(words)
+ for item in [[title,21],[subtitle,13]]:
+  var label=app._label(item[0],item[1],app.GOLD if primary and item[1]==21 else app.LIGHT);label.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;label.mouse_filter=Control.MOUSE_FILTER_IGNORE;words.add_child(label)
+ content.add_child(b);action_buttons.append(b);layout()
+func continue_learning():
+ var index:int=app.academy.next_lesson()
+ app._begin_training("basics" if index<7 else "tactics",index)
+func confirm_new():
+ var dialog:=ConfirmationDialog.new();dialog.dialog_text="Start a new match? Your current match will be replaced.";dialog.confirmed.connect(func():app._new_game();app._home_play());dialog.canceled.connect(dialog.queue_free);dialog.confirmed.connect(dialog.queue_free);add_child(dialog);dialog.popup_centered()
+func show_learn():
+ screen="learn";clear();text("Royal Academy",38);text("Watch. Command. Learn.",18)
+ text("Choose your next step. Earn 25 XP by completing each exercise yourself.",14)
+ stage("01 · Padati", "Recruit · pieces and movement", [0,1,2,3,4,5],0)
+ stage("02 · Ashvarohi", "Cavalry warrior · castling", [6],6)
+ stage("03 · Yoddha", "Warrior · pins and forks", [7,8],7)
+ text("04 · Senapati",22);text("Commander · openings and strategy — coming later",14)
+ text("05 · Maharathi",22);text("Master warrior · advanced tactics and endgames — coming later",14)
+ text("More checks, captures and checkmate exercises are planned. These are thematic ranks for your learning journey.",12)
+ button("Back",show_home)
+func stage(title:String,subtitle:String,indices:Array,first:int):
+ var done:int=app.academy.count(indices)
+ var next:=first
+ for index in indices:
+  if not app.academy.completed.has(index):next=index;break
+ action(title,subtitle+" · "+str(done)+"/"+str(indices.size()),func():app._begin_training("basics" if next<7 else "tactics",next),"learn" if first==0 else "tactics")
+func show_challenges():
+ screen="challenges";clear();text("Tactical challenges",38);text("Keep your king safe. Find the double attack.",17)
+ action("Break the pin","Free your Haathi without exposing your Raja",func():app._begin_training("tactics",7),"tactics")
+ action("Find the fork","Attack two targets with your Ghoda",func():app._begin_training("tactics",8),"tactics")
+ text("Guided challenges · more positions coming later",13);button("Back",show_home)
+func show_progress():
+ screen="progress";clear();text("Your academy record",38)
+ text(str(app.academy.xp())+" XP · "+str(app.academy.completed.size())+" of 9 exercises",22)
+ var meter=ProgressBar.new();meter.max_value=9;meter.value=app.academy.completed.size();meter.show_percentage=false;meter.custom_minimum_size.y=8;content.add_child(meter)
+ for row in [["Padati · movement",[0,1,2,3,4,5]],["Ashvarohi · castling",[6]],["Yoddha · tactics",[7,8]]]:
+  var count:int=app.academy.count(row[1]);text(row[0]+"  "+str(count)+"/"+str(row[1].size()),18)
+ text("Achievements",22)
+ for item in [["First command",app.academy.completed.size()>0],["Know your army",app.academy.count([0,1,2,3,4,5])==6],["Tactical eye",app.academy.count([7,8])==2]]:
+  text(("Earned · " if item[1] else "Not yet · ")+item[0],15)
+ text("Saved on this device/browser. Replaying a lesson does not duplicate XP. Clearing app data removes this record.",12)
+ action("Review lessons" if app.academy.completed.size()==9 else "Continue Learning","Return to your training ground",continue_learning,"learn",true)
+ button("Back",show_home)
+func show_openings():show_learn()
+func open_lessons(category:String):app._begin_training(category)
+

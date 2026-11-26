@@ -34,6 +34,7 @@ var scene_environment: Environment
 var piece_badges: Control
 var theme_index := 1
 var training
+var academy=preload("res://scripts/academy_progress.gd").new()
 var mobile_layout
 var ui_top:Control
 var ui_side:Control
@@ -98,6 +99,7 @@ var intro_subtitle: Label
 var intro_progress: ProgressBar
 
 func _ready() -> void:
+	academy.load_progress()
 	_configure_display()
 	Engine.max_fps=30
 	qa=OS.get_cmdline_user_args().has("--qa")
@@ -141,12 +143,12 @@ func _home_play(play_intro := true) -> void:
 	mobile_layout.drawer=false;_responsive()
 	if play_intro and intro_enabled and game.history.is_empty():_start_intro()
 
-func _begin_training(category:String) -> void:
+func _begin_training(category:String,lesson_index := -1) -> void:
 	if busy:_skip()
 	if not is_instance_valid(home_menu):_show_home()
 	home_active=false;home_menu.hide();game_ui.hide()
 	board_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);board_container.anchor_right=.72
-	training=preload("res://scripts/board_training.gd").new();training.app=self;training.category=category;add_child(training)
+	training=preload("res://scripts/board_training.gd").new();training.app=self;training.category=category;training.start_index=lesson_index;add_child(training)
 
 func _home_settings() -> void:
 	_home_play(false);sidebar_tabs.current_tab=1

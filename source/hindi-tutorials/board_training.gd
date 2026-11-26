@@ -9,6 +9,7 @@ var panel:PanelContainer
 var category:="basics"
 var available:Array=[]
 var index:=0
+var start_index:=-1
 var complete:=false
 var selected:=false
 var saved:Dictionary={}
@@ -27,6 +28,7 @@ var lesson_elapsed:=0.0
 var guidance:Control
 func _ready():
  layer=13
+ completed=app.academy.completed.duplicate()
  for key in ["game","notation","last_move","facing_by_square","cinematic","flipped","board_look","view_yaw","view_tilt","view_distance"]:saved[key]=app.get(key)
  var empty_notation:Array[String]=[]
  app.notation=empty_notation;app.last_move={};app.facing_by_square={};app.cinematic=false;app.flipped=false
@@ -56,7 +58,7 @@ func _ready():
  more.get_popup().id_pressed.connect(func(id):app.mobile_layout.zoom(-1.5 if id==0 else 1.5))
  next_button=app._button("Next lesson →",advance);outer.add_child(next_button)
  guidance=preload("res://scripts/tutorial_guidance.gd").new();guidance.training=self;add_child(guidance)
- layout();load_lesson(available[0])
+ layout();load_lesson(start_index if start_index in available else available[0])
 func layout():
  if not panel:return
  var size:=get_viewport().get_visible_rect().size
@@ -82,7 +84,7 @@ func load_lesson(value:int):
  app._marker(lesson.from,app.GOLD,false)
  heading.text=lesson.title.split(" · ")[1]
  feedback.text="Watch first\n"+lesson.text.split(". ")[0]+"."
- progress.text=str(completed.size())+" / "+str(available.size())+" completed"
+ progress.text=str(app.academy.count(available))+" / "+str(available.size())+" completed"
  play_narration()
  demonstrate(lesson_serial)
 func play_narration():
@@ -111,10 +113,12 @@ func move_finished():
  if phase=="demo":
   finish_demonstration(lesson_serial);return
  if app.game.history.is_empty():return
+ app.academy.finish(index)
  phase="complete";complete=true;selected=false;completed[index]=true;next_button.disabled=false;next_button.visible=true
  next_button.text="Finish lessons ✓" if index==available.back() else "Next lesson →"
  feedback.text="Well done!\n\n"+("Both the Raja and Haathi moved together." if index==6 else ("Your Ghoda now attacks the king on c7 and the rook on f6." if index==8 else ("You removed the pinning rook and kept your Raja safe." if index==7 else "You made a legal move on the battlefield.")))
- progress.text=str(completed.size())+" / "+str(available.size())+" completed"
+ progress.text=str(app.academy.count(available))+" / "+str(available.size())+" completed"
+ if app.academy.save_failed:progress.text+=" · Could not save on this device"
  if index==8:
   app._marker(50,app.GOLD,false);app._marker(45,app.GOLD,false)
 func leave():
