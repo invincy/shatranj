@@ -1,0 +1,11 @@
+Tutorial pacing and visibility, 2026-11-26
+
+Separate tutorial presentation speed 0.72, cinematic rig movement, longer knight jump, a 2.2-second result hold and 1.8-second board return. Front/side introductory shot followed by a route-and-defender view. First six lessons demonstrate a legal pawn capture, then reset to the exact original narrated practice FEN. Castling/pin/fork retain their actual teaching move. Practice and normal matches retain their existing speed.
+
+V2 recordings unchanged at pitch_scale 1.0. Narration temporarily pauses immediately before the measured practice cue when the demonstration is still playing, then resumes once the restored board is ready. Text remains stable during the demonstration.
+
+Tap guidance only in practice, anchored at the board edge. All tutorial pieces use the same small translucent icons as gameplay; moving attacker is unobscured. Badges now scale to 22 percent of projected tile span with a 12px maximum radius, default opacity 0.55. Next/Finish is in the top header, revealed only after success. Model preview uses warm fill/rim lighting and a gold halo behind the model; attack loop slowed and spaced out to 12 seconds.
+
+Passed all 9 lesson transitions, legal captures, minimum motion duration, exact practice reset, no demonstration XP, voice pause/resume and unchanged playback rate, top Next after completion, saved match restoration and mid-capture exit. Measured move/capture durations: pawn 6.2s, rook 9.4s, bishop 8.3s, knight 7.0s, queen 10.5s, king 6.6s, castling 5.1s, pin 12.8s, fork 3.4s.
+
+Passed narration lifecycle tests, player UI/opacity tests, Stockfish integration regression and offline packaging tests. Native rendered previews: 414x896, 320x640, 1280x800, 896x414. Browser tutorial loads and reaches practice without console warnings/errors. Physical phone and audible human review not performed.
