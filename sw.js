@@ -1,4 +1,4 @@
-const CACHE='shatranj-2af4484f7404e2';
+const CACHE='shatranj-9cbf4264c7f1fb';
 const ASSETS=["app-icon-180.png", "app-icon-192.png", "app-icon-512.png", "audio-credits.txt", "computer.js", "icon.svg", "index.apple-touch-icon.png", "index.audio.position.worklet.js", "index.audio.worklet.js", "index.html", "index.icon.png", "index.js", "index.pck.0.bin", "index.pck.1.bin", "index.png", "index.wasm.gz", "install.css", "install.js", "manifest.webmanifest", "startup-recovery.js", "stockfish/COPYING.txt", "stockfish/checksums.txt", "stockfish/credits.html", "stockfish/stockfish-19-lite-single.js", "stockfish/stockfish-19-lite-single.wasm"];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS.map(name => new Request(new URL(name,self.registration.scope),{cache:'reload'})))));
