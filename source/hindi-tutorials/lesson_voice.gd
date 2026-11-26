@@ -1,5 +1,5 @@
 extends Node
-## The supplied Aoede clips already contain one pitch-preserving 1.25x speedup.
+## The supplied Hinglish V2 Aoede clips already contain one pitch-preserving 1.25x speedup.
 ## Always play them at 1.0. Do not synthesize or speed them up again.
 const FILES = ["01_pawn", "02_rook", "03_bishop", "04_knight", "05_queen", "06_king", "07_castling", "08_pin", "09_fork"]
 static var muted := false

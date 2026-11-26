@@ -44,7 +44,7 @@ func run():
  print("TRAINING_TESTS_COMPLETE failures=",failures);quit(failures)
 
 func practice(t):
- var deadline=Time.get_ticks_msec()+12000
+ var deadline=Time.get_ticks_msec()+33000
  while t.phase!="practice" and Time.get_ticks_msec()<deadline:await process_frame
  check(t.phase=="practice" and not t.app.busy,"demonstration finishes and unlocks practice "+str(t.index))
  check(t.app.game.history.is_empty() and t.app.game.fen()==t.Lessons.LESSONS[t.index].fen,"demonstration restores original lesson position "+str(t.index))

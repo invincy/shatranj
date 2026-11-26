@@ -16,7 +16,7 @@ func run():
  var training = app.training
  check(training.voice.player.playing, "entering training starts pawn narration")
  check(app.sound.music_voice.stream_paused, "background music pauses during narration")
- var durations = [16.47, 16.06, 14.82, 15.52, 13.85, 16.10, 23.07, 21.31, 17.98]
+ var durations = [20.199, 17.326, 19.428, 17.765, 16.051, 17.829, 27.533, 22.823, 18.674]
  for index in range(7):
   training.load_lesson(index)
   check(training.voice.player.stream.resource_path.ends_with(training.LessonVoice.FILES[index] + ".mp3"), "correct clip for basic lesson " + str(index))

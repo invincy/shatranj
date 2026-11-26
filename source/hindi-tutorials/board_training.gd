@@ -20,6 +20,11 @@ var progress:Label
 var completed:Dictionary={}
 var phase:="demo"
 var lesson_serial:=0
+# Clip-local instruction onsets from V2 measured transcription; pin uses an approximate onset because that passage lacks reliable word alignment.
+const PRACTICE_CUES=[12.12,12.68,15.60,14.19,12.02,12.99,21.26,17.0,10.17]
+const DEMO_TARGETS=[28,51,54,44,30,26,6,60,35]
+var lesson_elapsed:=0.0
+var guidance:Control
 func _ready():
  layer=13
  for key in ["game","notation","last_move","facing_by_square","cinematic","flipped","board_look","view_yaw","view_tilt","view_distance"]:saved[key]=app.get(key)
@@ -38,18 +43,19 @@ func _ready():
  feedback=label("",16);box.add_child(feedback)
  progress=label("",12);box.add_child(progress)
  voice=LessonVoice.new();voice.sound=app.sound;add_child(voice)
- voice_status=label("Hindi narration",12);voice_status.modulate.a=.7;voice_status.visible=false;box.add_child(voice_status)
+ voice_status=label("Hinglish narration",12);voice_status.modulate.a=.7;voice_status.visible=false;box.add_child(voice_status)
  var tools_row:=HBoxContainer.new();tools_row.add_theme_constant_override("separation",4);outer.add_child(tools_row)
  tools_row.add_child(icon_button("back", "Back to home", app._show_home))
- tools_row.add_child(icon_button("replay", "Listen again", play_narration))
+ tools_row.add_child(icon_button("replay", "Replay guided lesson", func():load_lesson(index)))
  voice_mute=icon_button("sound", "Mute narration", func():pass);voice_mute.toggle_mode=true;voice_mute.button_pressed=LessonVoice.muted;tools_row.add_child(voice_mute)
- voice_mute.toggled.connect(func(value):voice.set_muted(value);voice_mute.icon=load("res://assets/ui/tutorial-"+("muted" if value else "sound")+".svg");voice_mute.tooltip_text="Unmute narration" if value else "Mute narration";voice_status.text="Voice muted" if value else "Hindi narration")
+ voice_mute.toggled.connect(func(value):voice.set_muted(value);voice_mute.icon=load("res://assets/ui/tutorial-"+("muted" if value else "sound")+".svg");voice_mute.tooltip_text="Unmute narration" if value else "Mute narration";voice_status.text="Voice muted" if value else "Hinglish narration")
  voice_mute.icon=load("res://assets/ui/tutorial-"+("muted" if LessonVoice.muted else "sound")+".svg")
  tools_row.add_child(icon_button("retry", "Watch demonstration again", func():load_lesson(index)))
  var more=MenuButton.new();more.text="⋯";more.tooltip_text="Board zoom";more.custom_minimum_size=Vector2(44,44);tools_row.add_child(more)
  more.get_popup().add_item("Zoom in",0);more.get_popup().add_item("Zoom out",1)
  more.get_popup().id_pressed.connect(func(id):app.mobile_layout.zoom(-1.5 if id==0 else 1.5))
  next_button=app._button("Next lesson →",advance);outer.add_child(next_button)
+ guidance=preload("res://scripts/tutorial_guidance.gd").new();guidance.training=self;add_child(guidance)
  layout();load_lesson(available[0])
 func layout():
  if not panel:return
@@ -68,7 +74,7 @@ func label(value:String,size:int)->Label:
  var result=app._label(value,size,app.LIGHT);result.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;return result
 func load_lesson(value:int):
  if app.busy:picker.select(available.find(index));return
- lesson_serial+=1;phase="demo"
+ lesson_serial+=1;phase="demo";lesson_elapsed=0.0
  index=value;complete=false;selected=false;picker.select(available.find(index));next_button.disabled=true;next_button.visible=false
  var lesson:Dictionary=Lessons.LESSONS[index]
  app.game=app.Rules.new(lesson.fen);app.notation.clear();app.last_move={};app.facing_by_square={};app.selected=-1;app._clear_markers();app._sync_pieces();app._update_ui();app.ended=false
@@ -84,12 +90,12 @@ func play_narration():
   voice.stop();voice_status.text="Voice muted";return
  var playing:bool=voice.play_lesson(index)
  voice_status.visible=not playing
- voice_status.text="Hindi narration" if playing else "Audio unavailable — follow the written lesson"
+ voice_status.text="Hinglish narration" if playing else "Audio unavailable — follow the written lesson"
 func tap(square:int):
  if phase!="practice" or app.busy or complete:return
  var lesson:Dictionary=Lessons.LESSONS[index]
  if square==lesson.from:
-  selected=true;app._select(square);feedback.text=lesson.task+"\nGreen: move · Coral: capture";return
+  selected=true;app._select(square);feedback.text="Now tap a highlighted destination.\nGreen: move · Coral: capture";return
  if not selected:
   feedback.text="First tap the gold-marked piece on "+app.Rules.square_name(lesson.from)+".";return
  var legal:=false
@@ -131,7 +137,7 @@ func demonstrate(serial:int):
  if serial!=lesson_serial or phase!="demo":return
  var lesson:Dictionary=Lessons.LESSONS[index]
  # Stable examples use the same coordinates as the supplied narration.
- var destinations=[28,51,54,44,30,26,6,60,35]
+ var destinations=DEMO_TARGETS
  app._select(lesson.from)
  await get_tree().create_timer(.9).timeout
  if serial!=lesson_serial or phase!="demo":return
@@ -139,11 +145,19 @@ func demonstrate(serial:int):
  app._make_move(lesson.from,destinations[index])
 func finish_demonstration(serial:int):
  phase="demo_reset"
- feedback.text="That's how it moves. Now you try."
+ feedback.text="Watch and listen\n"+Lessons.LESSONS[index].text
  await get_tree().create_timer(1.1).timeout
  if serial!=lesson_serial or phase!="demo_reset":return
  var lesson:Dictionary=Lessons.LESSONS[index]
  app.game=app.Rules.new(lesson.fen);app.notation.clear();app.last_move={};app.facing_by_square={};app.selected=-1;app._clear_markers();app._sync_pieces();app._update_ui();app.ended=false
- selected=false;phase="practice"
+ selected=false;phase="waiting_cue"
  app._marker(lesson.from,app.GOLD,false)
- feedback.text="Your turn\n"+lesson.task
+ feedback.text="Watch and listen\n"+lesson.text.split(". ")[0]+"."
+
+func _process(delta:float):
+ lesson_elapsed+=delta
+ if phase=="waiting_cue":
+  var timeline=voice.player.get_playback_position() if voice.player.playing else lesson_elapsed
+  if timeline>=PRACTICE_CUES[index]:
+   phase="practice"
+   feedback.text="Your turn — tap "+app.Rules.square_name(Lessons.LESSONS[index].from)+"\n"+Lessons.LESSONS[index].task

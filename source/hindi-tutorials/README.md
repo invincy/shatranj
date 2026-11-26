@@ -1,21 +1,11 @@
-# Hindi tutorial narration integration
+# Guided Hinglish tutorials V2
 
-Nine Aoede Hindi recordings are bundled inside the game pack, in lesson order: pawn, rook, bishop, knight, queen, king, castling, pin, fork. The original 1.25x pitch-preserving adjustment is already in the files. Godot plays at pitch_scale 1.0; do not apply another speed adjustment.
+The nine supplied Aoede V2 recordings replace V1. They already contain one pitch-preserving 1.25x adjustment; runtime playback stays at 1.0. The originals remain in audio/hinglish/v2 and older originals are retained separately. No recordings were regenerated, edited or sped up during integration. See timings.json for transcripts, durations and SHA-256 hashes.
 
-Entering or changing a lesson plays its matching clip. Listen again restarts that clip. Mute voice persists for the current game session. Retry restarts narration unless muted. Back stops narration immediately. Existing Mute all is respected. Music pauses while narration plays and resumes afterward. Written instructions remain available if audio cannot load. The clips cache offline with the complete game pack.
+Lessons demonstrate a legal move, reset their exercise position, and wait for the recording's instruction before enabling input. The cue is driven by actual playback position; muted/unavailable audio uses an elapsed-time fallback. Clip-local cue seconds: pawn 12.12, rook 12.68, bishop 15.60, knight 14.19, queen 12.02, king 12.99, castling 21.26, pin approximately 17.00, fork 10.17. These come from the supplied automated measured transcription; the pin passage lacks reliable word alignment, so its onset is approximate and should be checked by listening. No human listening approval is claimed.
 
-This directory preserves the changed Godot source for review and future builds. In the original development checkout, copy board_training.gd and lesson_voice.gd to game/scripts/, test_lesson_voice.gd to game/tests/, and the nine unchanged MP3s to game/assets/audio/hindi/. See timings.json for filenames, source transcripts, durations, and SHA-256 hashes. Build with the existing Web export and prepare_web.py workflow.
+Screen-space outlines, a pulsing ring and a connected callout identify the piece to tap, then outline allowed destination squares. These remain readable on mobile and do not intercept touches. Captures use coral, ordinary moves green. Next appears only after the learner completes the exercise. Replay restarts the guided sequence and recording together. Mute, exit, music restoration and original match restoration remain supported.
 
-## Validation and release status
+Launch shows a quiet loading indicator then Home. Only Play on a fresh match starts the cinematic; Settings, Learn and resumed matches bypass it. Web PWA packaging includes all new recordings.
 
-Godot narration lifecycle, nine clip mappings and measured durations, existing 3D training exercises, and mobile-layout tests pass. Web export, compressed loader, split pack integrity, and offline cache checks pass. Native rendered layout checked at 1280x800, 414x896, 896x414 and 320x640; voice controls remain outside the scrolling text.
-
-Listening review remains pending with the owner, especially 07_castling.mp3: automatic transcription was inconsistent. Real mobile browser audible playback also remains an owner check. On 2026-11-25 the owner requested deployment after technical verification and will review the audio afterward; neither listening nor real-device audibility is claimed as passed. No existing exercise position or spoken coordinate was changed.
-
-Review rerun on 2026-11-25: narration lifecycle, training exercises, mobile layout, web loader, split pack, PWA/offline packaging and home loader checks passed. All nine bundled source MP3s match the supplied recordings and their SHA-256 hashes; the ZIP passes integrity checking. Tested Godot source matches the PR source. Timing metadata matches the pack except for omitted Creator Studio project identifiers. Playback remains 1.0 with no regeneration or extra speed adjustment.
-
-## Demonstrate, then practise
-
-Each lesson now highlights and animates a legal example before resetting the lesson board for the learner. Input is blocked during the demonstration; only a learner move counts as completion. Next appears after successful practice; the final lesson offers Finish. Leaving or changing lessons invalidates pending demonstration callbacks. Muting does not block progression. Compact icon controls provide home, replay narration, voice mute, replay demonstration, and a zoom menu. Existing recordings still play at 1.0 without modification.
-
-Validation: all nine automatic demonstrations reset to the exact original FEN and unlock practice; legal/illegal input, castling, pin, fork, match restoration, mobile touch projection, narration lifecycle and offline web packaging pass. Rendered layout inspected at 320x640, 414x896, 896x414 and 1280x800. Copy the SVGs in ui/ to game/assets/ui/ when rebuilding from these source snapshots.
+Source snapshots: scripts go in game/scripts, tests in game/tests and ui SVGs in game/assets/ui. main.gd and loading_intro.html are in ../intro-camps. Visual checks cover 320x640, 414x896, 896x414 and 1280x800; preview_guided_v2.gd verifies startup routing and actual audio-position gating before capturing piece/destination prompts.

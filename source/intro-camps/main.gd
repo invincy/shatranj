@@ -120,10 +120,7 @@ func _ready() -> void:
 	elif OS.get_cmdline_user_args().has("--qa-armour"): _qa_armour_sequence()
 	elif OS.get_cmdline_user_args().has("--qa-haathi-head"): _qa_haathi_head_sequence()
 	elif OS.get_cmdline_user_args().has("--qa-haathi-body"): _qa_haathi_body_sequence()
-	elif intro_enabled:
-		if OS.get_cmdline_user_args().has("--web-loading-intro"):call_deferred("_show_home")
-		else:
-			startup_intro=true;call_deferred("_start_intro")
+	elif intro_enabled:call_deferred("_show_home")
 
 func _show_home() -> void:
 	if intro_active:startup_intro=false;_end_intro()
@@ -137,11 +134,12 @@ func _show_home() -> void:
 		home_menu=preload("res://scripts/home_menu.gd").new();home_menu.app=self;add_child(home_menu)
 	else:home_menu.show();home_menu.show_home()
 
-func _home_play() -> void:
+func _home_play(play_intro := true) -> void:
 	home_active=false;home_menu.hide();game_ui.show()
 	board_container.anchor_right=.76;board_container.anchor_top=.09;board_container.anchor_bottom=.96
 	_view_preset("front")
 	mobile_layout.drawer=false;_responsive()
+	if play_intro and intro_enabled and game.history.is_empty():_start_intro()
 
 func _begin_training(category:String) -> void:
 	if busy:_skip()
@@ -151,7 +149,7 @@ func _begin_training(category:String) -> void:
 	training=preload("res://scripts/board_training.gd").new();training.app=self;training.category=category;add_child(training)
 
 func _home_settings() -> void:
-	_home_play();sidebar_tabs.current_tab=1
+	_home_play(false);sidebar_tabs.current_tab=1
 	mobile_layout.drawer=true;_responsive()
 
 func _start_intro() -> void:
