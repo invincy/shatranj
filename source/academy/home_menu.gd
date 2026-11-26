@@ -34,7 +34,7 @@ func clear():
  titles.clear();action_buttons.clear()
  for child in content.get_children():content.remove_child(child);child.queue_free()
 func text(value:String,size:int=18):
- var label=app._label(value,size,app.LIGHT);label.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+ var label=preload("res://scripts/bilingual_labels.gd").label(value,size) if value.contains(" (") else app._label(value,size,app.LIGHT);label.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
  if size>=32:
   titles.append(label)
   var font:=SystemFont.new();font.font_names=PackedStringArray(["Georgia","Noto Serif"]);label.add_theme_font_override("font",font);label.add_theme_color_override("font_color",app.GOLD)
@@ -63,7 +63,12 @@ func action(title:String,subtitle:String,callback:Callable,icon:String,primary:=
  var image=TextureRect.new();image.texture=load("res://assets/ui/"+icon+".svg");image.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;image.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED;image.custom_minimum_size=Vector2(28,28);image.mouse_filter=Control.MOUSE_FILTER_IGNORE;row.add_child(image)
  var words=VBoxContainer.new();words.size_flags_horizontal=Control.SIZE_EXPAND_FILL;words.mouse_filter=Control.MOUSE_FILTER_IGNORE;row.add_child(words)
  for item in [[title,21],[subtitle,13]]:
-  var label=app._label(item[0],item[1],app.GOLD if primary and item[1]==21 else app.LIGHT);label.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;label.mouse_filter=Control.MOUSE_FILTER_IGNORE;words.add_child(label)
+  var label:Control
+  if item[1]==21:
+   label=preload("res://scripts/bilingual_labels.gd").label(item[0],21)
+  else:
+   label=app._label(item[0],item[1],app.LIGHT);label.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+  label.mouse_filter=Control.MOUSE_FILTER_IGNORE;words.add_child(label)
  content.add_child(b);action_buttons.append(b);layout()
 func continue_learning():
  var index:int=app.academy.next_lesson()
@@ -73,11 +78,11 @@ func confirm_new():
 func show_learn():
  screen="learn";clear();text("Royal Academy",38);text("Watch. Command. Learn.",18)
  text("Choose your next step. Earn 25 XP by completing each exercise yourself.",14)
- stage("01 · Padati", "Recruit · pieces and movement", [0,1,2,3,4,5],0)
- stage("02 · Ashvarohi", "Cavalry warrior · castling", [6],6)
- stage("03 · Yoddha", "Warrior · pins and forks", [7,8],7)
- text("04 · Senapati",22);text("Commander · openings and strategy — coming later",14)
- text("05 · Maharathi",22);text("Master warrior · advanced tactics and endgames — coming later",14)
+ stage("01 · Recruit (पदाति)", "Recruit · pieces and movement", [0,1,2,3,4,5],0)
+ stage("02 · Cavalry (अश्वारोही)", "Cavalry warrior · castling", [6],6)
+ stage("03 · Warrior (योद्धा)", "Warrior · pins and forks", [7,8],7)
+ text("04 · Commander (सेनापति)",22);text("Commander · openings and strategy — coming later",14)
+ text("05 · Master (महारथी)",22);text("Master warrior · advanced tactics and endgames — coming later",14)
  text("More checks, captures and checkmate exercises are planned. These are thematic ranks for your learning journey.",12)
  button("Back",show_home)
 func stage(title:String,subtitle:String,indices:Array,first:int):
@@ -95,7 +100,7 @@ func show_progress():
  screen="progress";clear();text("Your academy record",38)
  text(str(app.academy.xp())+" XP · "+str(app.academy.completed.size())+" of 9 exercises",22)
  var meter=ProgressBar.new();meter.max_value=9;meter.value=app.academy.completed.size();meter.show_percentage=false;meter.custom_minimum_size.y=8;content.add_child(meter)
- for row in [["Padati · movement",[0,1,2,3,4,5]],["Ashvarohi · castling",[6]],["Yoddha · tactics",[7,8]]]:
+ for row in [["Recruit (पदाति) · movement",[0,1,2,3,4,5]],["Cavalry (अश्वारोही) · castling",[6]],["Warrior (योद्धा) · tactics",[7,8]]]:
   var count:int=app.academy.count(row[1]);text(row[0]+"  "+str(count)+"/"+str(row[1].size()),18)
  text("Achievements",22)
  for item in [["First command",app.academy.completed.size()>0],["Know your army",app.academy.count([0,1,2,3,4,5])==6],["Tactical eye",app.academy.count([7,8])==2]]:

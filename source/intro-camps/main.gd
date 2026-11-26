@@ -14,7 +14,7 @@ const InfantryCapture = preload("res://scripts/infantry_capture.gd")
 const BattleAudio = preload("res://scripts/battle_audio.gd")
 const MountedMotion = preload("res://scripts/mounted_motion.gd")
 const ROLES = {"r":"haathi","b":"oont","n":"ghoda","p":"pyada","q":"rani","k":"raja"}
-const NAMES = {"r":"Haathi","b":"Oont","n":"Ghoda","p":"Pyada","q":"Rani","k":"Raja"}
+const NAMES = {"r":"Rook (हाथी)","b":"Bishop (ऊँट)","n":"Knight (घोड़ा)","p":"Pawn (प्यादा)","q":"Queen (रानी)","k":"King (राजा)"}
 const GOLD = Color("d8ad64")
 const INK = Color("0b171b")
 const LIGHT = Color("ece4cf")
@@ -100,6 +100,7 @@ var intro_progress: ProgressBar
 
 func _ready() -> void:
 	academy.load_progress()
+	ThemeDB.get_default_theme().default_font.fallbacks=[preload("res://assets/fonts/NotoSansDevanagari.ttf")]
 	_configure_display()
 	Engine.max_fps=30
 	qa=OS.get_cmdline_user_args().has("--qa")
@@ -1685,3 +1686,4 @@ func _knight_study() -> void:
 	_new_game(false)
 	_end_intro()
 	_make_move(1,18)
+

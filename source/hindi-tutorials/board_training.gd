@@ -14,7 +14,9 @@ var complete:=false
 var selected:=false
 var saved:Dictionary={}
 var feedback:Label
-var heading:Label
+var heading:RichTextLabel
+var picker_caption:RichTextLabel
+const Labels=preload("res://scripts/bilingual_labels.gd")
 var picker:OptionButton
 var next_button:Button
 var progress:Label
@@ -39,9 +41,14 @@ func _ready():
  var scroll:=ScrollContainer.new();scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL;outer.add_child(scroll)
  var box:=VBoxContainer.new();box.size_flags_horizontal=Control.SIZE_EXPAND_FILL;box.add_theme_constant_override("separation",8);scroll.add_child(box)
  picker=OptionButton.new();picker.custom_minimum_size.y=44;picker.clip_text=true
- for i in available:picker.add_item(Lessons.LESSONS[i].title,i)
+ picker.add_theme_font_override("font",Labels.FONT);picker.get_popup().add_theme_font_override("font",Labels.FONT)
+ for i in available:
+  var role=["p","r","b","n","q","k","k","r","n"][i]
+  picker.add_icon_item(load("res://assets/icons/"+role+".svg"),Lessons.LESSONS[i].title,i)
+ picker.add_theme_constant_override("icon_max_width",22)
  picker.item_selected.connect(func(item):load_lesson(picker.get_item_id(item)));box.add_child(picker)
- heading=label("",23);box.add_child(heading)
+ picker_caption=Labels.label("",18);picker_caption.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);picker_caption.offset_left=12;picker_caption.offset_right=-30;picker_caption.offset_top=7;picker.add_child(picker_caption)
+ heading=Labels.label("",23);box.add_child(heading)
  feedback=label("",16);box.add_child(feedback)
  progress=label("",12);box.add_child(progress)
  voice=LessonVoice.new();voice.sound=app.sound;add_child(voice)
@@ -82,7 +89,10 @@ func load_lesson(value:int):
  app.game=app.Rules.new(lesson.fen);app.notation.clear();app.last_move={};app.facing_by_square={};app.selected=-1;app._clear_markers();app._sync_pieces();app._update_ui();app.ended=false
  app.board_look=Vector3(0,.65,0);app._set_view(0,48,15)
  app._marker(lesson.from,app.GOLD,false)
- heading.text=lesson.title.split(" · ")[1]
+ var display:String=lesson.title.split(" · ")[1]
+ var role=["p","r","b","n","q","k","k","r","n"][index]
+ var title:String="[img=20x20]res://assets/icons/"+role+".svg[/img] "+Labels.format_name(display)
+ heading.text=title;picker_caption.text=title;picker.text="";picker.icon=null
  feedback.text="Watch first\n"+lesson.text.split(". ")[0]+"."
  progress.text=str(app.academy.count(available))+" / "+str(available.size())+" completed"
  play_narration()
