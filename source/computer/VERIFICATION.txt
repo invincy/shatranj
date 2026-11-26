@@ -1,0 +1,9 @@
+Stockfish browser integration, 2026-11-26
+
+Pinned stockfish.js npm 19.0.1 Lite single-threaded, unmodified engine, separate UCI Web Worker. GPL license, matching v19.0.1 source archive, upstream network and build instructions linked from /stockfish/credits.html and computer setup.
+
+Levels 1-10 map to rounded Skill Level 0-20; depth 4-13, movetime 350-1250ms, Hash 16MB. Approximate difficulty, no Elo claim. Worker starts only for a computer turn; it terminates at bestmove, cancellation or timeout. Offline shell includes engine JS/WASM.
+
+Verified: actual WASM engine at levels 1/4/5/10, legal responses, promotion, cancellation/replacement. Godot ownership, stale reply rejection, animation, undo on pending and completed replies, Black opening/undo, tutorial restore, local play and full rules perft pass. Browser played white level 4 and black level 5 with no console errors. Phone-sized setup inspected; no physical phone test. Loader, PWA and home startup tests pass.
+
+This update targets browser/PWA, not native Android APK or Windows executable. Elephant candidate preserved under builds/elephant-review-v1/candidate, not included.

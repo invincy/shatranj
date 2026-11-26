@@ -1,0 +1,5 @@
+0b383d5a63da644f628d99c33976ea6487ed89aaa59f0b3257992deac1171e6b  COPYING.txt
+bc39a94ff7b2567cef96152285b4bcc0bfd83f33a1bc46b62b333cc54c49eb21  credits.html
+ccb130d7ff29408531c47d859a49f91d59d4f482d05a53eb1a3231a4f624c91a  stockfish-19-lite-single.js
+ee4f115bdb2d32cadf96cada104a05b5ec257d7ad6f57582190b49bc71f096de  stockfish-19-lite-single.wasm
+a18aa8a871f5265014b110b3e07804ff3637899d2e189be6ded2b99e2c17a10e  stockfish-19.0.1-source.tar.gz
