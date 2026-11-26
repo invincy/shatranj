@@ -9,3 +9,11 @@ Screen-space outlines, a pulsing ring and a connected callout identify the piece
 Launch shows a quiet loading indicator then Home. Only Play on a fresh match starts the cinematic; Settings, Learn and resumed matches bypass it. Web PWA packaging includes all new recordings.
 
 Source snapshots: scripts go in game/scripts, tests in game/tests and ui SVGs in game/assets/ui. main.gd and loading_intro.html are in ../intro-camps. Visual checks cover 320x640, 414x896, 896x414 and 1280x800; preview_guided_v2.gd verifies startup routing and actual audio-position gating before capturing piece/destination prompts.
+
+## Animated portraits and tutorial cinematics
+
+The lesson panel now includes an independently lit live 3D portrait of the current piece, reusing the game's original model and attack/idle animations. Only one portrait model is active. It is framed responsively and has no repeating audio over narration. The board prompt includes a translucent round chess-symbol badge.
+
+Demonstrations transition from board view to a side close-up and a frontal view, follow the existing animated legal move (and existing animal calls), then smoothly return to the board. Practice remains locked until the narration cue and camera return. Leaving or switching lessons kills the tutorial camera tween; demonstration moves still award no progress. Normal game cinematic settings are restored afterward.
+
+Verified: elephant, camel and horse animation clips/call events, camera return before practice, exact lesson reset, no demonstration XP, exit during a shot, existing narration controls and mobile touch/layout checks. Native rendered views inspected; real-phone frame-rate/audio assessment remains a user-device check. Web loader and PWA checks pass.

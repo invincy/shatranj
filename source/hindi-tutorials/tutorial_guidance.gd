@@ -1,6 +1,8 @@
 extends Control
 var training
+var icons:Dictionary={}
 func _ready():
+ for role in ["p","r","b","n","q","k"]:icons[role]=load("res://assets/icons/"+role+".svg")
  mouse_filter=Control.MOUSE_FILTER_IGNORE
  set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 func _process(_delta):queue_redraw()
@@ -12,7 +14,7 @@ func outline(square:int,color:Color):
  for offset in [Vector3(-.46,.08,-.46),Vector3(.46,.08,-.46),Vector3(.46,.08,.46),Vector3(-.46,.08,.46),Vector3(-.46,.08,-.46)]:points.append(project(square,offset))
  draw_polyline(points,color,3.0,true)
 func _draw():
- if not is_instance_valid(training) or training.phase in ["complete","leaving"] or training.app.busy:return
+ if not is_instance_valid(training) or training.phase in ["complete","leaving"] or training.app.busy or training.shot_active:return
  var app=training.app
  var lesson=training.Lessons.LESSONS[training.index]
  var square:int=lesson.from
@@ -34,6 +36,10 @@ func _draw():
  var point=project(square,Vector3(0,.1,0))
  var pulse=22.0+3.0*sin(Time.get_ticks_msec()*.006)
  draw_arc(point,pulse,0,TAU,48,color,3.0,true)
+ var role:String=["p","r","b","n","q","k","k","r","n"][training.index]
+ var badge=point+Vector2(0,34)
+ draw_circle(badge,16,Color("102326d9"));draw_arc(badge,16,0,TAU,32,color,1.5,true)
+ draw_texture_rect(icons[role],Rect2(badge-Vector2(11,11),Vector2(22,22)),false,color)
  var font=ThemeDB.fallback_font
  var text_size=font.get_string_size(caption,HORIZONTAL_ALIGNMENT_LEFT,-1,16)
  var bounds=app.board_container.get_global_rect()

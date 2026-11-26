@@ -28,6 +28,9 @@ const PRACTICE_CUES=[12.12,12.68,15.60,14.19,12.02,12.99,21.26,17.0,10.17]
 const DEMO_TARGETS=[28,51,54,44,30,26,6,60,35]
 var lesson_elapsed:=0.0
 var guidance:Control
+var portrait_view:SubViewportContainer
+var camera_tween:Tween
+var shot_active:=false
 func _ready():
  layer=13
  completed=app.academy.completed.duplicate()
@@ -38,7 +41,9 @@ func _ready():
  panel=PanelContainer.new();panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);panel.anchor_left=.72;panel.offset_left=10;panel.offset_right=-12;panel.offset_top=24;panel.offset_bottom=-24;add_child(panel)
  panel.add_theme_stylebox_override("panel",app._style(Color("102326"),Color("8c734a"),4))
  var outer:=VBoxContainer.new();outer.add_theme_constant_override("separation",8);panel.add_child(outer)
- var scroll:=ScrollContainer.new();scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL;outer.add_child(scroll)
+ var body:=HBoxContainer.new();body.add_theme_constant_override("separation",8);body.size_flags_vertical=Control.SIZE_EXPAND_FILL;outer.add_child(body)
+ var scroll:=ScrollContainer.new();scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;scroll.size_flags_horizontal=Control.SIZE_EXPAND_FILL;body.add_child(scroll)
+ portrait_view=preload("res://scripts/tutorial_portrait.gd").new();portrait_view.app=app;portrait_view.custom_minimum_size.x=120;body.add_child(portrait_view)
  var box:=VBoxContainer.new();box.size_flags_horizontal=Control.SIZE_EXPAND_FILL;box.add_theme_constant_override("separation",8);scroll.add_child(box)
  picker=OptionButton.new();picker.custom_minimum_size.y=44;picker.clip_text=true
  picker.add_theme_font_override("font",Labels.FONT);picker.get_popup().add_theme_font_override("font",Labels.FONT)
@@ -46,7 +51,7 @@ func _ready():
   var role=["p","r","b","n","q","k","k","r","n"][i]
   picker.add_icon_item(load("res://assets/icons/"+role+".svg"),Lessons.LESSONS[i].title,i)
  picker.add_theme_constant_override("icon_max_width",22)
- picker.item_selected.connect(func(item):load_lesson(picker.get_item_id(item)));box.add_child(picker)
+ picker.item_selected.connect(func(item):load_lesson(picker.get_item_id(item)));outer.add_child(picker);outer.move_child(picker,0)
  picker_caption=Labels.label("",18);picker_caption.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);picker_caption.offset_left=12;picker_caption.offset_right=-30;picker_caption.offset_top=7;picker.add_child(picker_caption)
  heading=Labels.label("",23);box.add_child(heading)
  feedback=label("",16);box.add_child(feedback)
@@ -70,11 +75,12 @@ func layout():
  if not panel:return
  var size:=get_viewport().get_visible_rect().size
  var portrait:=size.y>size.x
+ if portrait_view:portrait_view.custom_minimum_size.x=clampf(size.x*.34,100,160)
  app.camera.keep_aspect=Camera3D.KEEP_WIDTH if portrait else Camera3D.KEEP_HEIGHT
  if heading:heading.visible=size.x>=1000 and size.y>=600
  if portrait:
-  app.mobile_layout.rect(app.board_container,Vector2(0,0),Vector2(size.x,size.y*.64))
-  app.mobile_layout.rect(panel,Vector2(10,size.y*.64+6),Vector2(size.x-20,size.y*.36-16))
+  app.mobile_layout.rect(app.board_container,Vector2(0,0),Vector2(size.x,size.y*.60))
+  app.mobile_layout.rect(panel,Vector2(10,size.y*.60+6),Vector2(size.x-20,size.y*.40-16))
  else:
   app.mobile_layout.rect(app.board_container,Vector2.ZERO,Vector2(size.x*.66 if size.y<600 else size.x*.72,size.y))
   var left:float=app.board_container.size.x+8
@@ -84,6 +90,7 @@ func label(value:String,size:int)->Label:
 func load_lesson(value:int):
  if app.busy:picker.select(available.find(index));return
  lesson_serial+=1;phase="demo";lesson_elapsed=0.0
+ stop_camera()
  index=value;complete=false;selected=false;picker.select(available.find(index));next_button.disabled=true;next_button.visible=false
  var lesson:Dictionary=Lessons.LESSONS[index]
  app.game=app.Rules.new(lesson.fen);app.notation.clear();app.last_move={};app.facing_by_square={};app.selected=-1;app._clear_markers();app._sync_pieces();app._update_ui();app.ended=false
@@ -93,6 +100,7 @@ func load_lesson(value:int):
  var role=["p","r","b","n","q","k","k","r","n"][index]
  var title:String="[img=20x20]res://assets/icons/"+role+".svg[/img] "+Labels.format_name(display)
  heading.text=title;picker_caption.text=title;picker.text="";picker.icon=null
+ portrait_view.show_piece(str(app.game.board[lesson.from]),lesson.from)
  feedback.text="Watch first\n"+lesson.text.split(". ")[0]+"."
  progress.text=str(app.academy.count(available))+" / "+str(available.size())+" completed"
  play_narration()
@@ -133,6 +141,7 @@ func move_finished():
   app._marker(50,app.GOLD,false);app._marker(45,app.GOLD,false)
 func leave():
  phase="leaving";lesson_serial+=1
+ stop_camera()
  voice.stop()
  if app.busy:app._skip()
  app.training=null
@@ -147,21 +156,31 @@ func advance():
  if index==available.back():app._show_home()
  else:load_lesson(available[available.find(index)+1])
 func demonstrate(serial:int):
- await get_tree().create_timer(.8).timeout
+ await get_tree().create_timer(.6).timeout
  if serial!=lesson_serial or phase!="demo":return
  var lesson:Dictionary=Lessons.LESSONS[index]
- # Stable examples use the same coordinates as the supplied narration.
- var destinations=DEMO_TARGETS
- app._select(lesson.from)
- await get_tree().create_timer(.9).timeout
+ var focus:Vector3=app._square_pos(lesson.from)+Vector3(0,.9,0)
+ shot_active=true
+ app._animate(app.pieces[lesson.from],"threat")
+ await camera_shot(focus+Vector3(3.0,1.1,1.2),focus,.85)
  if serial!=lesson_serial or phase!="demo":return
- feedback.text="Watch the highlighted move…"
- app._make_move(lesson.from,destinations[index])
+ await camera_shot(focus+Vector3(.4,.8,-3.4),focus,1.1)
+ if serial!=lesson_serial or phase!="demo":return
+ feedback.text="Watch the move…"
+ app._make_move(lesson.from,DEMO_TARGETS[index])
+func stop_camera():
+ if camera_tween and camera_tween.is_running():camera_tween.kill()
+ shot_active=false
+func camera_shot(position:Vector3,target:Vector3,duration:float):
+ camera_tween=create_tween()
+ camera_tween.tween_method(app._camera_blend.bind(app.camera.position,position,app.camera.quaternion,app._look_quat(position,target)),0.0,1.0,duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+ await camera_tween.finished
 func finish_demonstration(serial:int):
  phase="demo_reset"
  feedback.text="Watch and listen\n"+Lessons.LESSONS[index].text
- await get_tree().create_timer(1.1).timeout
+ await camera_shot(app.board_camera,app.board_look,.85)
  if serial!=lesson_serial or phase!="demo_reset":return
+ shot_active=false
  var lesson:Dictionary=Lessons.LESSONS[index]
  app.game=app.Rules.new(lesson.fen);app.notation.clear();app.last_move={};app.facing_by_square={};app.selected=-1;app._clear_markers();app._sync_pieces();app._update_ui();app.ended=false
  selected=false;phase="waiting_cue"
@@ -170,6 +189,12 @@ func finish_demonstration(serial:int):
 
 func _process(delta:float):
  lesson_elapsed+=delta
+ if phase=="demo" and app.busy and shot_active:
+  var piece=app.pieces.get(Lessons.LESSONS[index].from)
+  if is_instance_valid(piece):
+   var focus:Vector3=piece.position+Vector3(0,.85,0)
+   app.camera.position=app.camera.position.lerp(focus+Vector3(2.8,1.4,-3.8),minf(delta*3,1))
+   app.camera.look_at(focus)
  if phase=="waiting_cue":
   var timeline=voice.player.get_playback_position() if voice.player.playing else lesson_elapsed
   if timeline>=PRACTICE_CUES[index]:

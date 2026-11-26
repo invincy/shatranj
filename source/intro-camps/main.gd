@@ -926,7 +926,8 @@ func _finish_move() -> void:
 			facing_by_square.erase(last_move.rook_from)
 			facing_by_square[last_move.rook_to]=atan2(escort.x,escort.z)
 	busy=false; skip_button.visible=false
-	camera.position=board_camera; camera.look_at(board_look)
+	if not is_instance_valid(training) or training.phase!="demo":
+		camera.position=board_camera; camera.look_at(board_look)
 	_update_court_visibility()
 	_sync_pieces(); _update_ui()
 	if is_instance_valid(training):training.move_finished()
