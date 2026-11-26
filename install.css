@@ -1,1 +1,6 @@
 #install-card{position:fixed;z-index:1000;top:max(6px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));max-width:calc(100% - 16px);box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:2px 8px;border:1px solid #53665c;border-radius:8px;background:#102628f2;color:#e4dfd2;font:12px/1.3 system-ui,sans-serif;box-shadow:0 2px 8px #0003}#install-card[hidden]{display:none}#install-message{max-width:240px}#install-card button{min-height:40px;padding:4px 8px;border:0;border-radius:5px;background:transparent;color:#c6d7cf;font:600 12px system-ui;white-space:nowrap;cursor:pointer}#install-card #install-now{color:#edc679}#install-card button:focus-visible{outline:2px solid #fff;outline-offset:1px}@media(max-width:360px){#install-card{gap:2px;padding:2px 5px}#install-message{max-width:120px}}
+
+/* Installation stays a small optional corner control; updates remain explicit. */
+#install-card:not(.update-offer){right:64px;padding:0;border-color:#9b855455;background:#102326c9}
+#install-card:not(.update-offer) #install-message,#install-card:not(.update-offer) #install-later{display:none}
+#install-card:not(.update-offer) #install-now{width:42px;height:42px;padding:0;font-size:25px}
