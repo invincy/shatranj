@@ -1,0 +1,7 @@
+Startup recovery, 2026-11-26
+
+User reported missing WebGL2 in installed PWA. The generated Godot preflight uses canvas.getContext(webgl2); no evidence yet establishes why that phone returned null. The game still requires WebGL2. This patch does not claim to fix hardware/browser support.
+
+Startup failures now replace the technical-only notice with troubleshooting, a user-triggered reload, Android Chrome intent link with browser fallback, an ordinary game link and expandable technical details rendered as text. Failure also unlocks a waiting service-worker update without showing an installation prompt. No cache, progress or app data deletion.
+
+Tests passed: WebGL vs general error messaging, retry, Android/desktop links, text-only technical details, failure event, generated-loader hook, install suppression during failure, update availability after failed startup, existing PWA/update tests and home loader checks. Real phone failure has not been reproduced or resolved here.

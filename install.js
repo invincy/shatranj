@@ -1,4 +1,5 @@
 (() => {
+  let failed = !!window.shatranjStartupFailed;
   let pending = null, dismissed = false, ready = false, waiting = null, reloading = false;
   const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   const card = document.createElement('aside');
@@ -8,8 +9,9 @@
   const message = card.querySelector('#install-message'), button = card.querySelector('#install-now');
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const knownInstalled = () => {try{return localStorage.getItem('shatranj-installed') === 'yes';}catch{return false;}};
-  const show = () => { card.hidden = !ready || dismissed || (!waiting && (standalone() || knownInstalled() || (!pending && !ios))); };
+  const show = () => { card.hidden = !(ready || (failed && waiting)) || dismissed || (!waiting && (standalone() || knownInstalled() || (!pending && !ios))); };
   card.querySelector('#install-later').addEventListener('click', () => {dismissed=true;card.hidden=true;});
+  window.addEventListener('shatranj-startup-failed',()=>{failed=true;show();});
   window.addEventListener('beforeinstallprompt', event => {event.preventDefault();pending=event;show();});
   window.addEventListener('appinstalled', () => {pending=null;card.hidden=true;try{localStorage.setItem('shatranj-installed','yes');}catch{}});
   button.addEventListener('click', async () => {
