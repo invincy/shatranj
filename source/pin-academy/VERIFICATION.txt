@@ -1,0 +1,7 @@
+Pin teaching and academy navigation, 2026-11-26
+
+Learn Chess always opens the academy list, regardless of progress. Separate Start/Continue card launches the next unfinished lesson. All nine lessons are individually selectable with completion status and English/Hindi names. In-game Learn entries and tutorial Back route to the academy list.
+
+Pin demonstration keeps e8 attacker, e2 shield and e1 king visible from a higher board angle. It first highlights the blocked attack, illustrates the rook moving aside to d2 with an illegal-move label and exposed red attack line, restores the shield, then demonstrates legal Rxe8. The sideways illustration changes only the model transform, never rules/history. Legal escape and practice use ChessRules. V2 narration and coordinates retained; practice cue waits for the complete demonstration.
+
+Passed: home entry with existing progress opens list; nine IDs present; separate Continue resumes next unfinished lesson; hypothetical d2 move exposes king in independent rules check; live demo leaves FEN/history unchanged; original practice FEN restored; illegal sideways learner move rejected; Rxe8 succeeds and king remains safe; Next stays at top; returning to list and exiting mid-illustration preserve original match. Stockfish integration regression and offline packaging tests passed. Native 414x896 screenshots visually reviewed. No physical phone test.
