@@ -1,4 +1,4 @@
-const CACHE='shatranj-5717954e55f088';
+const CACHE='shatranj-d0432d5eea7251';
 const ASSETS=["app-icon-180.png", "app-icon-192.png", "app-icon-512.png", "audio-credits.txt", "icon.svg", "index.apple-touch-icon.png", "index.audio.position.worklet.js", "index.audio.worklet.js", "index.html", "index.icon.png", "index.js", "index.pck.0.bin", "index.pck.1.bin", "index.png", "index.wasm.gz", "install.css", "install.js", "manifest.webmanifest"];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS.map(name => new Request(new URL(name,self.registration.scope),{cache:'reload'})))));
@@ -13,4 +13,9 @@ self.addEventListener('fetch', event => {
   if(name==='' || name==='index.html')name='index.html';
   if(!ASSETS.includes(name))return;
   event.respondWith(caches.open(CACHE).then(async cache => (await cache.match(new URL(name,scope).href)) || fetch(event.request)));
+});
+
+// Activate only after an explicit Update click; never interrupt a live match automatically.
+self.addEventListener('message', event => {
+  if(event.data && event.data.type==='ACTIVATE_UPDATE')event.waitUntil(self.skipWaiting());
 });

@@ -1,0 +1,45 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const root='browser-site/github-pages/';
+const script=fs.readFileSync(root+'install.js','utf8');
+function setup({installed=false,ios=false,standalone=false}={}){
+ const handlers={},els={},swHandlers={};let card,observer,loading=true,reloads=0;
+ for(const id of ['#install-message','#install-now','#install-later'])els[id]={textContent:'',addEventListener(type,fn){this[type]=fn;}};
+ const storage=new Map(installed?[['shatranj-installed','yes']]:[]);
+ const reg={waiting:null,addEventListener(name,fn){this[name]=fn;},update:async()=>{}};
+ const context={document:{getElementById:()=>loading?{}:null,createElement(){card={hidden:true,setAttribute(){},querySelector(id){return els[id];}};return card;},body:{appendChild(){}}},MutationObserver:class{constructor(fn){observer=fn;}observe(){}disconnect(){}},window:{confirm:()=>true,addEventListener(name,fn){handlers[name]=fn;}},location:{reload(){reloads++;}},navigator:{userAgent:ios?'iPhone':'Android Chrome',platform:'',maxTouchPoints:1,standalone,serviceWorker:{controller:{},addEventListener:(name,fn)=>swHandlers[name]=fn,register:()=>Promise.resolve(reg)}},matchMedia:()=>({matches:standalone}),localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)}};
+ vm.runInNewContext(script,context);return {handlers,els,card,storage,reg,context,swHandlers,get reloads(){return reloads;},loaded(){loading=false;observer();}};
+}
+let state=setup();let prompted=0;
+const installEvent=()=>({preventDefault(){},prompt:async()=>{prompted++;},userChoice:Promise.resolve({outcome:'accepted'})});
+state.handlers.beforeinstallprompt(installEvent());assert.equal(state.card.hidden,true,'no prompt during loading');
+state.loaded();assert.equal(state.card.hidden,false);assert.equal(prompted,0);
+state.els['#install-later'].click();assert.equal(state.card.hidden,true);
+state=setup({standalone:true});state.loaded();assert.equal(state.card.hidden,true);
+state=setup({installed:true});state.loaded();assert.equal(state.card.hidden,true);
+state=setup({ios:true});assert.equal(state.card.hidden,true);state.loaded();await state.els['#install-now'].click();assert.match(state.els['#install-message'].textContent,/Safari.*Share.*Add to Home Screen/);
+state=setup();state.loaded();assert.equal(state.card.hidden,true,'unsupported install prompt stays hidden');state.handlers.beforeinstallprompt(installEvent());await state.els['#install-now'].click();assert.equal(prompted,1);assert.equal(state.card.hidden,true);
+state.handlers.appinstalled();assert.equal(state.storage.get('shatranj-installed'),'yes');
+state=setup({standalone:true});let activated=0;
+state.reg.waiting={postMessage(msg){assert.equal(msg.type,'ACTIVATE_UPDATE');activated++;}};
+await Promise.resolve();assert.equal(state.card.hidden,true,'updates also wait for startup');state.loaded();assert.equal(state.card.hidden,false);
+state.context.window.confirm=()=>false;await state.els['#install-now'].click();assert.equal(activated,0,'cancel preserves game');
+state.context.window.confirm=()=>true;await state.els['#install-now'].click();assert.equal(activated,1);state.swHandlers.controllerchange();assert.equal(state.reloads,1);
+console.log('PASS prompt waits for game, compact dismissal, installation, standalone updates, explicit confirmation and reload');
+const manifest=JSON.parse(fs.readFileSync(root+'manifest.webmanifest'));
+assert.equal(manifest.scope,'./');assert.equal(manifest.start_url,'./');assert.equal(manifest.display,'standalone');
+for(const icon of manifest.icons)assert(fs.existsSync(root+icon.src));
+const worker=fs.readFileSync(root+'sw.js','utf8');const events={};let requested=[],network=0,result;
+const cached={ok:true};const scope='https://invincy.github.io/shatranj/';
+const cache={addAll:async urls=>{requested=urls;},match:async url=>url===scope+'index.pck.0.bin'?cached:undefined};
+vm.runInNewContext(worker,{URL,Request,Promise,self:{registration:{scope},clients:{claim:async()=>{}},addEventListener:(k,v)=>events[k]=v},caches:{open:async()=>cache,keys:async()=>[],delete:async()=>true},fetch:async()=>{network++;return {ok:true};}});
+let pending;events.install({waitUntil(p){pending=p;}});await pending;
+for(const name of ['index.html','index.wasm.gz','index.pck.0.bin','index.pck.1.bin','install.js'])assert(requested.some(r=>r.url===scope+name));
+events.fetch({request:new Request(scope+'index.pck.0.bin?v=1'),respondWith(p){result=p;}});assert.equal(await result,cached);assert.equal(network,0);
+let intercepted=false;events.fetch({request:new Request('https://invincy.github.io/invincible/'),respondWith(){intercepted=true;}});assert.equal(intercepted,false);
+let activations=0;
+// An unrelated message cannot activate an update.
+events.message({data:{type:'OTHER'},waitUntil(){throw Error('Unexpected activation');}});
+assert(worker.includes("event.data.type==='ACTIVATE_UPDATE'"),'activation requires explicit update message');
+console.log('PASS manifest, complete offline asset list, cached game data and isolated scope');
